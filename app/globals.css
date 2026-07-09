@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: #000000;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-image:
+      radial-gradient(ellipse 100% 60% at 50% -10%, rgba(77,159,255,0.06), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0,255,163,0.04), transparent),
+      radial-gradient(ellipse 50% 60% at 0% 50%, rgba(168,85,247,0.03), transparent);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background-color: rgba(77, 159, 255, 0.35);
+    color: #fff;
+  }
+
+  * { @apply border-border; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(77,159,255,0.3), rgba(0,255,163,0.3));
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(77,159,255,0.6), rgba(0,255,163,0.6));
+  }
+}
+
+@layer components {
+  /* ── Glassmorphism panels ── */
+  .glass-panel {
+    @apply bg-surface-glass backdrop-blur-xl border border-border rounded-2xl shadow-glass;
+    background: linear-gradient(135deg, rgba(14,17,23,0.8) 0%, rgba(8,10,13,0.9) 100%);
+  }
+
+  .glass-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-top: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  /* ── Mono labels ── */
+  .mono-label {
+    @apply font-mono text-[10px] uppercase tracking-[0.2em] text-ink-muted;
+  }
+
+  /* ── Neon text effects ── */
+  .neon-text-bull {
+    color: #00FFA3;
+    text-shadow: 0 0 10px rgba(0,255,163,0.8), 0 0 30px rgba(0,255,163,0.4);
+  }
+  .neon-text-bear {
+    color: #FF4466;
+    text-shadow: 0 0 10px rgba(255,68,102,0.8), 0 0 30px rgba(255,68,102,0.4);
+  }
+  .neon-text-data {
+    color: #4D9FFF;
+    text-shadow: 0 0 10px rgba(77,159,255,0.8), 0 0 30px rgba(77,159,255,0.4);
+  }
+  .neon-text-gold {
+    color: #FFD700;
+    text-shadow: 0 0 10px rgba(255,215,0,0.8), 0 0 30px rgba(255,215,0,0.4);
+  }
+
+  /* ── Gradient borders ── */
+  .gradient-border-bull {
+    position: relative;
+  }
+  .gradient-border-bull::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, #00FFA3, #4D9FFF);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  .gradient-border-bear::before {
+    background: linear-gradient(135deg, #FF4466, #A855F7);
+  }
+
+  /* ── Shimmer loading ── */
+  .shimmer-text {
+    background: linear-gradient(90deg, #4D9FFF 0%, #00FFA3 50%, #4D9FFF 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* ── Holographic surface ── */
+  .holo-surface {
+    background: linear-gradient(
+      135deg,
+      rgba(77,159,255,0.08) 0%,
+      rgba(0,255,163,0.05) 25%,
+      rgba(168,85,247,0.08) 50%,
+      rgba(77,159,255,0.05) 75%,
+      rgba(0,212,255,0.08) 100%
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 6s ease infinite;
+  }
+
+  /* ── Terminal cursor ── */
+  .terminal-cursor::after {
+    content: '▋';
+    animation: blink 1s step-start infinite;
+    color: #4D9FFF;
+  }
+
+  /* ── Verdict glow rings ── */
+  .verdict-ring-bull {
+    box-shadow:
+      0 0 0 1px rgba(0,255,163,0.4),
+      0 0 30px rgba(0,255,163,0.15),
+      0 0 80px rgba(0,255,163,0.08),
+      inset 0 0 30px rgba(0,255,163,0.05);
+  }
+  .verdict-ring-bear {
+    box-shadow:
+      0 0 0 1px rgba(255,68,102,0.4),
+      0 0 30px rgba(255,68,102,0.15),
+      0 0 80px rgba(255,68,102,0.08),
+      inset 0 0 30px rgba(255,68,102,0.05);
+  }
+}
+
+/* ── Markdown output ── */
+.oracle-markdown h2 {
+  @apply text-base font-semibold text-ink mt-5 mb-2 pb-1.5 border-b border-border;
+  background: linear-gradient(90deg, #4D9FFF, #00FFA3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.oracle-markdown h2:first-child { @apply mt-0; }
+.oracle-markdown h3 { @apply text-sm font-semibold text-ink mt-4 mb-1.5; }
+.oracle-markdown p { @apply text-sm leading-relaxed text-ink-muted mb-3; }
+.oracle-markdown table { @apply w-full text-sm border-collapse mb-4; }
+.oracle-markdown th {
+  @apply text-left font-mono text-[10px] uppercase tracking-wider text-ink-muted border-b border-border-strong pb-2 pr-4;
+}
+.oracle-markdown td { @apply py-2 pr-4 border-b border-border text-ink text-xs; }
+.oracle-markdown ul { @apply list-disc list-inside space-y-1 text-sm text-ink-muted mb-3; }
+.oracle-markdown li { @apply text-xs; }
+.oracle-markdown strong { @apply text-ink font-semibold; }
+
+/* ── Animated background aurora ── */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.aurora-bg::before {
+  content: '';
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  left: -200px;
+  top: -200px;
+  background: radial-gradient(circle, rgba(77,159,255,0.08) 0%, transparent 70%);
+  animation: aurora 25s ease infinite;
+}
+.aurora-bg::after {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  right: -100px;
+  bottom: -100px;
+  background: radial-gradient(circle, rgba(0,255,163,0.06) 0%, transparent 70%);
+  animation: aurora 20s ease infinite reverse;
+}
