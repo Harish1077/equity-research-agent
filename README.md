@@ -4,6 +4,8 @@
 
 **Every stock goes on trial. Bull argues. Bear attacks. The AI Judge rules on data alone.**
 
+### 🚀 Live Demo: [https://stocksage-beige.vercel.app/](https://stocksage-beige.vercel.app/)
+
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org/)
 [![LangGraph](https://img.shields.io/badge/LangGraph.js-0.2-7C3AED?style=for-the-badge)](https://langchain-ai.github.io/langgraphjs/)
