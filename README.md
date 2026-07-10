@@ -242,6 +242,52 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 - [ ] **Backtester**: Test Synthesis Judge recommendations over 1, 3, and 5-year horizons.
 - [ ] **Multi-ticker Portfolios**: Generate optimized Markowitz efficient frontier allocations.
 
+## Key Decisions & Trade-offs
+
+### 1. Deterministic Local ML Suite
+* **Decision:** We implemented the 7 classifiers (Logistic Regression, Random Forest, XGBoost, MLP, SVM, etc.) and trading/time-series forecasting models directly in pure JavaScript/TypeScript math formulas rather than utilizing external python runtimes, microservices, or bulky dependencies like Tensorflow.js.
+* **Why:** This makes the codebase 100% serverless-friendly, allows fast and free local execution (0ms network overhead), and keeps the bundle size small enough to easily fit on Vercel's Serverless Functions.
+* **Trade-off:** Mathematical models in JS use simplified coefficients and heuristics. While they are directionally correct and provide reliable quantitative metrics, they do not have the complex dynamic training capabilities of a full python machine learning server (e.g. Scikit-learn/PyTorch).
+
+### 2. Isolated Adversarial LLM Reasoning
+* **Decision:** We structured the debate such that the Bull and Bear agents are isolated in distinct LangGraph nodes and only communicate their final arguments to the Synthesis Judge. They cannot talk directly to each other or modify each other's content.
+* **Why:** Allowing agents to chat in a multi-turn conversation often leads to consensus bias, where the Bear agent starts agreeing with the Bull agent's points out of politeness or context dilution. Complete node isolation preserves adversarial integrity.
+* **Trade-off:** We lose the ability for multi-turn rebuttals (e.g., Bear calling out a specific flaw in the Bull's argument), which was sacrificed to ensure the arguments remain pure and distinct.
+
+### 3. Serverless-first & Zero Database Architecture
+* **Decision:** We chose Client-side LocalStorage to persist watchlist stocks, research history, and side-by-side comparison states.
+* **Why:** This allowed us to build a rich interactive workspace with 0 setup time, 0 database overhead, and 0 operational costs for hosting.
+* **Trade-off:** Research logs and watchlists are device-bound. If you open the website on mobile, you won't see your desktop watchlist history.
+
+---
+
+## Example Runs
+
+Below are summaries of StockSage's structured trials on several major stocks:
+
+### 1. NVIDIA Corporation (NVDA)
+* **Verdict:** `INVEST` (Conviction Score: `88/100`)
+* **ML Suite Consensus:** Strong Buy (CatBoost & Random Forest highly favored due to 50%+ profit margin).
+* **Bull Case:** Dominant GPU market share (85%+), massive AI data center infrastructure moat, and strong Free Cash Flow generation.
+* **Bear Case:** High valuation premium (P/E > 60), customer concentration risk (hyper-scalers designing in-house chips), and export controls.
+* **Judge's Rule:** The Quantitative Auditor confirmed NVDA's Debt-to-Equity is low and Return on Equity is exceptionally high, validating the Bull's growth argument. The conviction was set to 88 due to high margins protecting against downside risk.
+
+### 2. TESLA Inc. (TSLA)
+* **Verdict:** `PASS` (Conviction Score: `42/100`)
+* **ML Suite Consensus:** Neutral / Pass (High valuation compared to standard automotive peers, volatile beta).
+* **Bull Case:** EV brand dominance, Full Self-Driving (FSD) recurring high-margin licensing potential, and growth in energy storage.
+* **Bear Case:** Margin compression due to price wars, high dependency on CEO leadership, and automotive cyclicality.
+* **Judge's Rule:** While the Bull argued for tech-multiple valuation, the Judge sided with the Bear on structural auto-industry margins, marking TSLA as a `PASS` due to high P/E relative to automotive cash generation.
+
+---
+
+## What We Would Improve with More Time
+
+1. **Structured RAG on SEC Filings:** Integrate an autonomous document parsing engine to fetch and chunk actual 10-K and 10-Q PDF documents, letting the Auditor analyze the MD&A (Management's Discussion and Analysis) section for hidden risks.
+2. **Earnings Call Transcript Sentiment Analysis:** Extract transcripts of recent earnings calls and run local sentiment extraction to calculate executive confidence vs. analyst skepticism scores.
+3. **Judge Recommendation Backtesting:** Build a historical simulation engine that queries prices from 1, 3, and 5 years ago, runs the graph, and measures the returns of "INVEST" verdicts vs. standard indexes (S&P 500).
+4. **Cloud Database Sync:** Implement a lightweight Supabase/PostgreSQL backend layer to allow user accounts, shared investment watchlists, and collaborative team research boards.
+
 ---
 
 ## API Reference
