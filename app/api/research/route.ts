@@ -5,7 +5,9 @@ import type { ResearchState } from "@/lib/graph/state";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+// On Vercel Hobby (free) plan, maxDuration is capped at 10s.
+// If you are on a Pro/Enterprise plan, you can uncomment this line to allow up to 120s:
+// export const maxDuration = 120;
 
 /**
  * POST /api/research
@@ -52,10 +54,12 @@ export async function POST(req: NextRequest) {
         const hasGemini = !!process.env.GEMINI_API_KEY;
 
         if (!hasGemini) {
+          const isProd = process.env.NODE_ENV === "production";
           send({
             type: "error",
-            message:
-              "Missing Gemini credentials. Add GEMINI_API_KEY to .env.local before running research.",
+            message: isProd
+              ? "Missing Gemini credentials. Please configure GEMINI_API_KEY in your Vercel Project Settings and redeploy."
+              : "Missing Gemini credentials. Add GEMINI_API_KEY to .env.local before running research.",
           });
           return;
         }
