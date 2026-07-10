@@ -2,15 +2,6 @@
 
 <div align="center">
 
-```
- _____ _____ _____ _____ _   _ _____ ___  ___  _____ _____ 
-/  ___|_   _|  _  /  __ \ | | /  ___|/ _ \ \ \ / / _ \  ___|
-\ `--.  | | | | | | /  \/ |_| \ `--./ /_\ \ \ V / /_\ \ |__ 
- `--. \ | | | | | | |   |  _  |`--. \  _  | /   \  _  |  __|
-/\__/ / | | \ \_/ / \__/\ | | /\__/ / | | |/ /^\ \ | | | |___
-\____/  \_/  \___/ \____/_| |_\____/\_| |_/\/   \/_| |_\____/
-```
-
 **Every stock goes on trial. Bull argues. Bear attacks. The AI Judge rules on data alone.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
