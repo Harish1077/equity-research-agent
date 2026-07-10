@@ -19,6 +19,12 @@
 [![Groq](https://img.shields.io/badge/Groq-Llama_3.3_70B-00FFA3?style=for-the-badge)](https://groq.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
+<br/>
+
+<img src="assets/stocksage-preview.jpg" alt="StockSage Overview" width="100%"/>
+
+<br/>
+
 ---
 
 ### [Architecture](#architecture) • [Features](#features) • [ML Model Suite](#ml-model-suite) • [Quick Start](#quick-start) • [API Reference](#api-reference)
