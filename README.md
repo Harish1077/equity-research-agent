@@ -1,9 +1,5 @@
 <div align="center">
 
-<img src="assets/stocksage-banner.png" width="100%" />
-
-<div align="center">
-
 #  STOCKSAGE
 
 ### The AI Investment Committee
