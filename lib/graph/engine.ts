@@ -10,7 +10,7 @@ import {
 } from "./nodes";
 
 /**
- * EQUITY ORACLE — Adversarial Research Graph
+ * STOCKSAGE — Adversarial Research Graph
  * ────────────────────────────────────────────
  *
  *        START

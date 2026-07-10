@@ -2,11 +2,15 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, Zap, TrendingUp, BarChart3, Shield, RefreshCw, TerminalSquare, LayoutDashboard, Activity } from "lucide-react";
+import { Eye, Zap, TrendingUp, BarChart3, Shield, RefreshCw, TerminalSquare, LayoutDashboard, Activity, History, Info, Star } from "lucide-react";
+import Link from "next/link";
 import NeuralSearch from "@/components/NeuralSearch";
 import LiveTerminal, { type AgentLogEntry } from "@/components/LiveTerminal";
 import VerdictDisplay from "@/components/VerdictDisplay";
 import MetricsPanel from "@/components/MetricsPanel";
+import HistoryDrawer from "@/components/HistoryDrawer";
+import ComparePanel from "@/components/ComparePanel";
+import { saveAnalysis, type HistoryEntry } from "@/lib/history";
 import type { FinancialSnapshot, Verdict } from "@/lib/graph/state";
 
 type RunStatus = "idle" | "running" | "error" | "done";
@@ -174,8 +178,9 @@ export default function Home() {
   const [showLeft, setShowLeft] = useState(true);
   const [showRight, setShowRight] = useState(true);
   const [isDesktop, setIsDesktop] = useState(false);
-  // Mobile panel tabs: "feed" | "verdict" | "metrics"
   const [mobileTab, setMobileTab] = useState<"feed" | "verdict" | "metrics">("verdict");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [compareEntries, setCompareEntries] = useState<[HistoryEntry, HistoryEntry] | null>(null);
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
@@ -187,6 +192,25 @@ export default function Home() {
   const resetToHome = useCallback(() => {
     abortRef.current?.abort();
     setState(INITIAL_STATE);
+    setMobileTab("verdict");
+  }, []);
+
+  // Restore a history entry without re-running the API
+  const restoreEntry = useCallback((entry: HistoryEntry) => {
+    setState({
+      status: "done",
+      ticker: entry.ticker,
+      resolvedCompanyName: entry.resolvedCompanyName,
+      fundamentals: entry.fundamentals,
+      quantML: entry.quantML,
+      verdict: entry.verdict,
+      convictionScore: entry.convictionScore,
+      riskFactors: entry.riskFactors,
+      analysis: entry.analysis,
+      errorMessage: null,
+      agentLog: [],
+      activeAgent: null,
+    });
     setMobileTab("verdict");
   }, []);
 
@@ -250,9 +274,9 @@ export default function Home() {
         }
         case "final": {
           const s = event.state;
-          return {
+          const nextState = {
             ...prev,
-            status: "done",
+            status: "done" as const,
             activeAgent: null,
             ticker: s?.ticker || prev.ticker,
             resolvedCompanyName: s?.resolvedCompanyName || prev.resolvedCompanyName,
@@ -263,6 +287,20 @@ export default function Home() {
             riskFactors: s?.riskFactors ?? [],
             analysis: s?.analysis || "",
           };
+          // Save to history
+          if (nextState.ticker) {
+            saveAnalysis({
+              ticker: nextState.ticker,
+              resolvedCompanyName: nextState.resolvedCompanyName,
+              verdict: nextState.verdict as Verdict,
+              convictionScore: nextState.convictionScore,
+              analysis: nextState.analysis,
+              riskFactors: nextState.riskFactors,
+              fundamentals: nextState.fundamentals,
+              quantML: nextState.quantML,
+            });
+          }
+          return nextState;
         }
         case "error":
           return { ...prev, status: "error", activeAgent: null, errorMessage: event.message };
@@ -279,11 +317,38 @@ export default function Home() {
       {/* Aurora background */}
       <div className="aurora-bg" aria-hidden />
 
+      {/* History drawer */}
+      <HistoryDrawer
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        onRestoreEntry={restoreEntry}
+        onCompare={(a, b) => { setCompareEntries([a, b]); setHistoryOpen(false); }}
+      />
+
+      {/* Compare panel */}
+      {compareEntries && (
+        <ComparePanel
+          entryA={compareEntries[0]}
+          entryB={compareEntries[1]}
+          onClose={() => setCompareEntries(null)}
+        />
+      )}
+
       {/* ── Header ── */}
       <header className="relative z-10 flex items-center justify-between px-5 py-3 border-b border-border/60 shrink-0"
         style={{ background: "linear-gradient(180deg, rgba(8,10,13,0.95) 0%, rgba(8,10,13,0.85) 100%)", backdropFilter: "blur(20px)" }}>
         {/* Logo */}
         <div className="flex items-center gap-3">
+          {/* History toggle */}
+          <motion.button
+            onClick={() => setHistoryOpen(true)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title="Research history"
+            className="p-1.5 rounded-lg text-ink-faint hover:text-data hover:bg-data/10 transition-colors duration-150"
+          >
+            <History className="h-4 w-4" />
+          </motion.button>
           <motion.div
             className="relative h-8 w-8 rounded-xl flex items-center justify-center overflow-hidden"
             whileHover={{ scale: 1.1 }}
@@ -297,8 +362,8 @@ export default function Home() {
             />
           </motion.div>
           <div>
-            <div className="font-bold tracking-tight text-ink text-sm leading-none">EQUITY ORACLE</div>
-            <div className="mono-label text-[9px] mt-0.5 hidden sm:block">decision intelligence engine</div>
+            <div className="font-bold tracking-tight text-ink text-sm leading-none">STOCKSAGE</div>
+            <div className="mono-label text-[9px] mt-0.5 hidden sm:block">adversarial stock intelligence</div>
           </div>
         </div>
 
@@ -360,6 +425,13 @@ export default function Home() {
               </motion.button>
             </>
           )}
+          {/* Nav links */}
+          <Link href="/watchlist" className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-[10px] font-mono font-bold tracking-wider uppercase text-ink-muted hover:text-gold hover:border-gold/30 hover:bg-gold/5 transition-all duration-200">
+            <Star className="h-3 w-3" /> Watchlist
+          </Link>
+          <Link href="/about" className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border text-[10px] font-mono font-bold tracking-wider uppercase text-ink-muted hover:text-violet hover:border-violet/30 hover:bg-violet/5 transition-all duration-200">
+            <Info className="h-3 w-3" /> About
+          </Link>
         </div>
       </header>
 
@@ -517,6 +589,7 @@ export default function Home() {
                       fundamentals={state.fundamentals}
                       riskFactors={state.riskFactors}
                       quantML={state.quantML}
+                      ticker={state.ticker}
                     />
                   </motion.div>
                 )}
@@ -574,6 +647,7 @@ export default function Home() {
                           fundamentals={state.fundamentals}
                           riskFactors={state.riskFactors}
                           quantML={state.quantML}
+                          ticker={state.ticker}
                         />
                       </motion.div>
                     )}

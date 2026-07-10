@@ -2,7 +2,7 @@
   "name": "equity-oracle",
   "version": "1.0.0",
   "private": true,
-  "description": "EQUITY ORACLE — an adversarial multi-agent investment research engine built on LangGraph.js",
+  "description": "STOCKSAGE — an adversarial multi-agent stock research engine built on LangGraph.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

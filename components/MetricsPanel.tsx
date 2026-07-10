@@ -1,14 +1,36 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, TrendingUp, TrendingDown, BrainCircuit, Zap } from "lucide-react";
+import { Activity, TrendingUp, TrendingDown, BrainCircuit, Zap, Download, BarChart2 } from "lucide-react";
 import type { FinancialSnapshot } from "@/lib/graph/state";
 
 interface MetricsPanelProps {
   fundamentals: FinancialSnapshot | null;
   riskFactors: string[];
   quantML: any;
+  ticker?: string;
+}
+
+// ── Sector benchmark data ─────────────────────────────────────
+const SECTOR_BENCHMARKS: Record<string, { pe: number; de: number; roe: number; growth: number; margin: number; beta: number }> = {
+  Technology:   { pe: 28, de: 60,  roe: 22, growth: 15, margin: 18, beta: 1.25 },
+  Financial:    { pe: 14, de: 180, roe: 11, growth: 8,  margin: 22, beta: 1.10 },
+  Healthcare:   { pe: 22, de: 50,  roe: 14, growth: 9,  margin: 12, beta: 0.80 },
+  Energy:       { pe: 12, de: 45,  roe: 10, growth: 5,  margin: 8,  beta: 1.15 },
+  Consumer:     { pe: 20, de: 75,  roe: 16, growth: 7,  margin: 10, beta: 0.90 },
+  Industrial:   { pe: 18, de: 65,  roe: 13, growth: 6,  margin: 9,  beta: 1.05 },
+};
+
+// Simple sector guesser based on company name patterns
+function guessSector(name: string): string {
+  const n = name.toLowerCase();
+  if (/bank|capital|financial|insurance|invest|morgan|goldman|jpmorgan|visa|mastercard/.test(n)) return "Financial";
+  if (/health|pharma|bio|medical|drug|pfizer|johnson|abbott|merck/.test(n)) return "Healthcare";
+  if (/oil|energy|petroleum|exxon|chevron|shell|bp|gas/.test(n)) return "Energy";
+  if (/food|retail|consumer|amazon|walmart|target|costco|procter/.test(n)) return "Consumer";
+  if (/industrial|aerospace|caterpillar|boeing|3m|honeywell/.test(n)) return "Industrial";
+  return "Technology";
 }
 
 function fmtLarge(n: number | null): string {
@@ -77,8 +99,8 @@ function AnimatedBar({ value, color, delay = 0 }: { value: number; color: string
   );
 }
 
-export default function MetricsPanel({ fundamentals, riskFactors, quantML }: MetricsPanelProps) {
-  const [tab, setTab] = useState<"fundamentals" | "ml">("fundamentals");
+export default function MetricsPanel({ fundamentals, riskFactors, quantML, ticker }: MetricsPanelProps) {
+  const [tab, setTab] = useState<"fundamentals" | "ml" | "benchmarks">("fundamentals");
 
   const metrics = fundamentals ? [
     { label: "Market Cap",     value: fmtLarge(fundamentals.marketCap) },
@@ -92,28 +114,44 @@ export default function MetricsPanel({ fundamentals, riskFactors, quantML }: Met
     { label: "Profit Margin",  value: fmt(fundamentals.profitMargin, "%") },
     { label: "ROE",            value: fmt(fundamentals.returnOnEquity, "%") },
     { label: "Beta",           value: fmt(fundamentals.beta) },
+    { label: "Insider Own.",   value: fmt(fundamentals.insiderOwnershipPct, "%") },
   ] : [];
 
+  const handleExport = useCallback(() => {
+    const data = { ticker, fundamentals, quantML, riskFactors, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${ticker || "analysis"}_stocksage.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [ticker, fundamentals, quantML, riskFactors]);
+
+  const sector = fundamentals ? guessSector(fundamentals.companyName) : "Technology";
+  const benchmark = SECTOR_BENCHMARKS[sector];
+
   const TABS = [
-    { id: "fundamentals" as const, label: "Hard Metrics", icon: Activity },
-    { id: "ml" as const,           label: "ML Ensemble",  icon: BrainCircuit, disabled: !quantML },
+    { id: "fundamentals" as const, label: "Metrics",    icon: Activity },
+    { id: "ml" as const,           label: "ML Suite",   icon: BrainCircuit, disabled: !quantML },
+    { id: "benchmarks" as const,   label: "Benchmarks", icon: BarChart2, disabled: !fundamentals },
   ];
 
   return (
     <div className="glass-panel flex flex-col h-full overflow-hidden">
-      {/* Header tabs */}
-      <div className="flex border-b shrink-0" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+      {/* Header tabs + export */}
+      <div className="flex items-center border-b shrink-0" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
         {TABS.map((t) => (
           <motion.button
             key={t.id}
             onClick={() => !t.disabled && setTab(t.id)}
             disabled={t.disabled}
             whileHover={!t.disabled ? { backgroundColor: "rgba(255,255,255,0.02)" } : undefined}
-            className="flex-1 py-3 text-center flex items-center justify-center gap-1.5 transition-all duration-200 relative"
+            className="flex-1 py-3 text-center flex items-center justify-center gap-1 transition-all duration-200 relative"
             style={{ opacity: t.disabled ? 0.35 : 1, cursor: t.disabled ? "not-allowed" : "pointer" }}
           >
-            <t.icon className="h-3.5 w-3.5" style={{ color: tab === t.id ? "#4D9FFF" : "#7A8299" }} />
-            <span className="font-mono text-[10px] uppercase tracking-widest font-bold"
+            <t.icon className="h-3 w-3" style={{ color: tab === t.id ? "#4D9FFF" : "#7A8299" }} />
+            <span className="font-mono text-[9px] uppercase tracking-widest font-bold"
               style={{ color: tab === t.id ? "#4D9FFF" : "#7A8299" }}>
               {t.label}
             </span>
@@ -126,6 +164,16 @@ export default function MetricsPanel({ fundamentals, riskFactors, quantML }: Met
             )}
           </motion.button>
         ))}
+        {/* Export button */}
+        {fundamentals && (
+          <button
+            onClick={handleExport}
+            title="Export analysis as JSON"
+            className="px-3 py-3 text-ink-faint hover:text-data hover:bg-data/5 transition-colors duration-150 border-l border-border/40 shrink-0"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Content */}
@@ -267,6 +315,9 @@ export default function MetricsPanel({ fundamentals, riskFactors, quantML }: Met
               </div>
             )}
           </>
+        ) : tab === "benchmarks" ? (
+          /* Sector Benchmarks */
+          <SectorBenchmarksView fundamentals={fundamentals!} benchmark={benchmark} sector={sector} />
         ) : (
           /* ML Ensemble view */
           <>
@@ -339,6 +390,84 @@ export default function MetricsPanel({ fundamentals, riskFactors, quantML }: Met
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Sector benchmarks sub-view ────────────────────────────────
+function SectorBenchmarksView({
+  fundamentals,
+  benchmark,
+  sector,
+}: {
+  fundamentals: FinancialSnapshot;
+  benchmark: { pe: number; de: number; roe: number; growth: number; margin: number; beta: number };
+  sector: string;
+}) {
+  const rows = [
+    { label: "P/E Ratio",   company: fundamentals.peRatio,          sector: benchmark.pe,     higherIsBad: true,  suffix: "x" },
+    { label: "Debt/Equity", company: fundamentals.debtToEquity,     sector: benchmark.de,     higherIsBad: true,  suffix: "" },
+    { label: "ROE %",       company: fundamentals.returnOnEquity,   sector: benchmark.roe,    higherIsBad: false, suffix: "%" },
+    { label: "Rev Growth",  company: fundamentals.revenueGrowthYoY, sector: benchmark.growth, higherIsBad: false, suffix: "%" },
+    { label: "Margin %",    company: fundamentals.profitMargin,     sector: benchmark.margin, higherIsBad: false, suffix: "%" },
+    { label: "Beta",        company: fundamentals.beta,             sector: benchmark.beta,   higherIsBad: true,  suffix: "" },
+  ];
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <p className="mono-label text-[9px]">vs. {sector} Sector Avg</p>
+        <span className="px-2 py-0.5 rounded-full font-mono text-[8px] border border-violet/30 bg-violet/10 text-violet">
+          {sector}
+        </span>
+      </div>
+      <div className="space-y-3">
+        {rows.map((row, i) => {
+          const val = row.company;
+          const sec = row.sector;
+          const ahead = val !== null && (row.higherIsBad ? val < sec : val > sec);
+          const delta = val !== null ? ((val - sec) / sec) * 100 : null;
+          const maxBar = Math.max(val ?? 0, sec) * 1.2 || 1;
+          return (
+            <motion.div
+              key={row.label}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+              className="rounded-xl p-3"
+              style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] text-ink-muted">{row.label}</span>
+                {delta !== null && (
+                  <span className="font-mono text-[9px] font-bold" style={{ color: ahead ? "#00FFA3" : "#FF4466" }}>
+                    {ahead ? "↑" : "↓"} {Math.abs(delta).toFixed(1)}% vs avg
+                  </span>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <div>
+                  <div className="flex justify-between text-[9px] mb-1">
+                    <span className="font-mono text-data">Company</span>
+                    <span className="font-mono text-ink">{val !== null ? `${val.toFixed(1)}${row.suffix}` : "—"}</span>
+                  </div>
+                  <AnimatedBar value={val !== null ? Math.min(100, (val / maxBar) * 100) : 0} color="#4D9FFF" delay={i * 0.06} />
+                </div>
+                <div>
+                  <div className="flex justify-between text-[9px] mb-1">
+                    <span className="font-mono text-ink-faint">Sector Avg</span>
+                    <span className="font-mono text-ink-muted">{sec.toFixed(1)}{row.suffix}</span>
+                  </div>
+                  <AnimatedBar value={Math.min(100, (sec / maxBar) * 100)} color="rgba(122,130,153,0.6)" delay={i * 0.06 + 0.1} />
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+      <p className="mono-label text-[8px] mt-4 text-center opacity-40">
+        Sector averages are indicative estimates based on industry medians
+      </p>
     </div>
   );
 }

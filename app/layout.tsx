@@ -8,25 +8,25 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "EQUITY ORACLE — Adversarial Investment Research Engine",
+  title: "STOCKSAGE — Adversarial AI Stock Research Engine",
   description:
-    "An autonomous multi-agent research desk. Bull and Bear argue about every stock, and the Oracle rules on hard data alone.",
+    "An autonomous multi-agent research desk. Bull and Bear argue about every stock, and the AI rules on hard data alone.",
   keywords: ["stock analysis", "investment research", "AI finance", "equity analysis", "bull bear debate"],
-  authors: [{ name: "Equity Oracle" }],
+  authors: [{ name: "StockSage" }],
   robots: "index, follow",
   openGraph: {
     type: "website",
-    title: "EQUITY ORACLE — Adversarial Investment Research Engine",
+    title: "STOCKSAGE — Adversarial AI Stock Research Engine",
     description:
-      "Bull and Bear agents debate every stock. The Oracle rules on data. AI-powered investment research.",
-    siteName: "Equity Oracle",
+      "Bull and Bear agents debate every stock. The AI rules on data. Multi-agent investment research.",
+    siteName: "StockSage",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "EQUITY ORACLE — Adversarial AI Stock Research",
+    title: "STOCKSAGE — Adversarial AI Stock Research",
     description:
-      "Bull and Bear agents debate every stock. The Oracle rules on hard data alone.",
+      "Bull and Bear agents debate every stock. The AI rules on hard data alone.",
   },
   icons: {
     icon: "/favicon.svg",

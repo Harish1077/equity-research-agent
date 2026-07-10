@@ -2,12 +2,28 @@
 
 import { useState, useEffect, useRef, useCallback, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Loader2, ChevronRight } from "lucide-react";
+import { Search, Loader2, ChevronRight, Clock, X, Wifi, WifiOff } from "lucide-react";
+import { getRecentSearches, pushRecentSearch, clearRecentSearches } from "@/lib/history";
 
 interface NeuralSearchProps {
   onSubmit: (query: string) => void;
   isRunning: boolean;
   compact?: boolean;
+}
+
+// ── Market status helper (NYSE hours: 9:30–16:00 ET Mon–Fri) ──
+function getMarketStatus(): { open: boolean; label: string } {
+  const now = new Date();
+  // Convert to Eastern Time
+  const etStr = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const et = new Date(etStr);
+  const day = et.getDay(); // 0=Sun, 6=Sat
+  const h = et.getHours();
+  const m = et.getMinutes();
+  const mins = h * 60 + m;
+  const isWeekday = day >= 1 && day <= 5;
+  const isOpen = isWeekday && mins >= 570 && mins < 960; // 9:30–16:00
+  return { open: isOpen, label: isOpen ? "MARKET OPEN" : "MARKET CLOSED" };
 }
 
 export default function NeuralSearch({ onSubmit, isRunning, compact = false }: NeuralSearchProps) {
@@ -16,16 +32,46 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [isFocused, setIsFocused] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showRecent, setShowRecent] = useState(false);
+  const [marketStatus, setMarketStatus] = useState(getMarketStatus());
   const abortRef = useRef<AbortController | null>(null);
   const debounceRef = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const skipFetchRef = useRef(false);
+
+  // Update market status every minute
+  useEffect(() => {
+    const id = setInterval(() => setMarketStatus(getMarketStatus()), 60000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Load recent searches
+  useEffect(() => {
+    setRecentSearches(getRecentSearches());
+  }, []);
+
+  // Global Ctrl+K / Cmd+K shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!value.trim() || isRunning) return;
     skipFetchRef.current = true;
     setIsOpen(false);
+    setShowRecent(false);
+    pushRecentSearch(value.trim());
+    setRecentSearches(getRecentSearches());
     onSubmit(value.trim());
   };
 
@@ -46,6 +92,7 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
         setSuggestions(json.results || []);
         setActiveIndex(-1);
         setIsOpen((json.results || []).length > 0);
+        setShowRecent(false);
       } catch (err) {
         if ((err as any)?.name === "AbortError") return;
       }
@@ -53,9 +100,14 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
   }, []);
 
   useEffect(() => {
-    if (isRunning) { setIsOpen(false); return; }
+    if (isRunning) { setIsOpen(false); setShowRecent(false); return; }
     if (skipFetchRef.current) { skipFetchRef.current = false; return; }
-    fetchSuggestions(value);
+    if (value.trim().length >= 2) {
+      fetchSuggestions(value);
+    } else {
+      setSuggestions([]);
+      setIsOpen(false);
+    }
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
       abortRef.current?.abort();
@@ -66,24 +118,45 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
     skipFetchRef.current = true;
     setValue(s.symbol);
     setIsOpen(false);
+    setShowRecent(false);
+    pushRecentSearch(s.symbol);
+    setRecentSearches(getRecentSearches());
     onSubmit(s.symbol);
   };
 
+  const chooseRecent = (q: string) => {
+    skipFetchRef.current = true;
+    setValue(q);
+    setShowRecent(false);
+    setIsOpen(false);
+    pushRecentSearch(q);
+    setRecentSearches(getRecentSearches());
+    onSubmit(q);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isOpen || suggestions.length === 0) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, suggestions.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && activeIndex >= 0) {
-      e.preventDefault();
-      chooseSuggestion(suggestions[activeIndex]);
+    if (isOpen && suggestions.length > 0) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex((i) => Math.min(i + 1, suggestions.length - 1)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIndex((i) => Math.max(i - 1, 0)); }
+      else if (e.key === "Enter" && activeIndex >= 0) { e.preventDefault(); chooseSuggestion(suggestions[activeIndex]); }
+      else if (e.key === "Escape") { setIsOpen(false); }
     } else if (e.key === "Escape") {
-      setIsOpen(false);
+      setShowRecent(false);
     }
   };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    if (!value && recentSearches.length > 0 && !isRunning) setShowRecent(true);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    // Small delay to allow click events to fire first
+    setTimeout(() => { setShowRecent(false); setIsOpen(false); }, 180);
+  };
+
+  const dropdownVisible = (isOpen && suggestions.length > 0) || (showRecent && recentSearches.length > 0 && !value);
 
   return (
     <motion.form
@@ -95,9 +168,7 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
         {/* Multi-layer glow ring */}
         <motion.div
           className="absolute -inset-[2px] rounded-2xl pointer-events-none"
-          animate={{
-            opacity: isRunning ? 1 : isFocused ? 0.8 : 0.3,
-          }}
+          animate={{ opacity: isRunning ? 1 : isFocused ? 0.8 : 0.3 }}
           transition={{ duration: 0.4 }}
           style={{
             background: isRunning
@@ -122,10 +193,7 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
           {isRunning && (
             <motion.div
               className="absolute top-0 bottom-0 w-12 pointer-events-none"
-              style={{
-                background: "linear-gradient(90deg, transparent, rgba(77,159,255,0.4), transparent)",
-                zIndex: 0,
-              }}
+              style={{ background: "linear-gradient(90deg, transparent, rgba(77,159,255,0.4), transparent)", zIndex: 0 }}
               animate={{ left: ["-10%", "110%"] }}
               transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
             />
@@ -134,10 +202,7 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
           {/* Icon */}
           <div className="relative z-10 shrink-0">
             {isRunning ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-              >
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}>
                 <Loader2 className="h-5 w-5 text-data" />
               </motion.div>
             ) : (
@@ -148,17 +213,46 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
           {/* Input */}
           <input
             ref={inputRef}
+            id="neural-search-input"
             type="text"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            placeholder={compact ? "Search another company..." : "Enter a company name — e.g. \"the iPhone company\""}
+            placeholder={compact ? "Search another company..." : 'Enter a company name — e.g. "the iPhone company"'}
             disabled={isRunning}
             autoFocus={!compact}
             className="relative z-10 flex-1 bg-transparent outline-none text-ink placeholder:text-ink-faint text-base disabled:opacity-50"
           />
+
+          {/* Market status badge */}
+          {!compact && (
+            <div className="relative z-10 shrink-0 hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+              style={{
+                background: marketStatus.open ? "rgba(0,255,163,0.08)" : "rgba(122,130,153,0.08)",
+                border: `1px solid ${marketStatus.open ? "rgba(0,255,163,0.2)" : "rgba(122,130,153,0.2)"}`,
+              }}
+            >
+              {marketStatus.open
+                ? <motion.div className="h-1.5 w-1.5 rounded-full bg-bull" animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.5, repeat: Infinity }} />
+                : <div className="h-1.5 w-1.5 rounded-full bg-ink-faint" />
+              }
+              <span className="font-mono text-[8px] font-bold" style={{ color: marketStatus.open ? "#00FFA3" : "#7A8299" }}>
+                {marketStatus.label}
+              </span>
+            </div>
+          )}
+
+          {/* Keyboard shortcut hint */}
+          {!compact && !isFocused && !isRunning && (
+            <div className="relative z-10 shrink-0 hidden lg:flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded text-[8px] font-mono text-ink-faint border border-border">
+                {typeof navigator !== "undefined" && navigator.platform.includes("Mac") ? "⌘" : "Ctrl"}
+              </kbd>
+              <kbd className="px-1.5 py-0.5 rounded text-[8px] font-mono text-ink-faint border border-border">K</kbd>
+            </div>
+          )}
 
           {/* Submit button */}
           <motion.button
@@ -186,10 +280,10 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
           </motion.button>
         </div>
 
-        {/* Autocomplete dropdown */}
+        {/* Dropdown: suggestions OR recent searches */}
         <AnimatePresence>
-          {isOpen && suggestions.length > 0 && (
-            <motion.ul
+          {dropdownVisible && (
+            <motion.div
               initial={{ opacity: 0, y: -8, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -202,28 +296,63 @@ export default function NeuralSearch({ onSubmit, isRunning, compact = false }: N
                 backdropFilter: "blur(24px)",
               }}
             >
-              {suggestions.map((s, idx) => (
-                <motion.li
-                  key={s.symbol + idx}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                  onMouseDown={(ev) => ev.preventDefault()}
-                  onClick={() => chooseSuggestion(s)}
-                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-all duration-150 ${
-                    idx === activeIndex
-                      ? "bg-data/15 border-l-2 border-data"
-                      : "hover:bg-white/[0.04] border-l-2 border-transparent"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold text-data">{s.symbol}</span>
-                    <span className="text-ink-muted text-xs truncate max-w-[200px]">{s.name}</span>
+              {/* Recent searches */}
+              {showRecent && recentSearches.length > 0 && !value && (
+                <>
+                  <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
+                    <span className="font-mono text-[9px] text-ink-faint uppercase tracking-widest">Recent</span>
+                    <button
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { clearRecentSearches(); setRecentSearches([]); setShowRecent(false); }}
+                      className="font-mono text-[9px] text-ink-faint hover:text-bear transition-colors"
+                    >
+                      Clear
+                    </button>
                   </div>
-                  <ChevronRight className="h-3 w-3 text-ink-faint shrink-0" />
-                </motion.li>
-              ))}
-            </motion.ul>
+                  {recentSearches.slice(0, 6).map((q, idx) => (
+                    <motion.div
+                      key={q + idx}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.03 }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => chooseRecent(q)}
+                      className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/[0.04] border-l-2 border-transparent hover:border-data/40 transition-all duration-150"
+                    >
+                      <Clock className="h-3 w-3 text-ink-faint shrink-0" />
+                      <span className="font-mono text-xs text-ink-muted">{q}</span>
+                    </motion.div>
+                  ))}
+                </>
+              )}
+
+              {/* Autocomplete suggestions */}
+              {isOpen && suggestions.length > 0 && (
+                <ul>
+                  {suggestions.map((s, idx) => (
+                    <motion.li
+                      key={s.symbol + idx}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.04 }}
+                      onMouseDown={(ev) => ev.preventDefault()}
+                      onClick={() => chooseSuggestion(s)}
+                      className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-all duration-150 ${
+                        idx === activeIndex
+                          ? "bg-data/15 border-l-2 border-data"
+                          : "hover:bg-white/[0.04] border-l-2 border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-xs font-bold text-data">{s.symbol}</span>
+                        <span className="text-ink-muted text-xs truncate max-w-[200px]">{s.name}</span>
+                      </div>
+                      <ChevronRight className="h-3 w-3 text-ink-faint shrink-0" />
+                    </motion.li>
+                  ))}
+                </ul>
+              )}
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
