@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div align="center">
 
 #  STOCKSAGE
@@ -39,9 +40,46 @@ STOCKSAGE is an educational and research platform designed to demonstrate multi-
 It is **not** financial advice.
 
 </div>
+=======
+﻿<div align="center">
+
+<br/>
+
+`
+ _____ _____ _____ _____ _   _ _____ ___  ___  _____ _____ 
+/  ___|_   _|  _  /  __ \ | | /  ___|/ _ \ \ \ / / _ \  ___|
+\ --.  | | | | | | /  \/ |_| \ --./ /_\ \ \ V / /_\ \ |__ 
+ --. \ | | | | | | |   |  _  |--. \  _  | /   \  _  |  __|
+/\__/ / | | \ \_/ / \__/\ | | /\__/ / | | |/ /^\ \ | | | |___
+\____/  \_/  \___/ \____/_| |_\____/\_| |_/\/   \/_| |_\____/
+`
+>>>>>>> 667198d (docs: rewrite README to 10/10 — full architecture, feature tables, API reference, contributing guide)
+
+# STOCKSAGE
+
+### Adversarial AI Stock Research Engine
+
+**Every stock is put on trial. Bull argues. Bear attacks. The AI rules on data alone.**
+
+<br/>
+
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org/)
+[![LangGraph](https://img.shields.io/badge/LangGraph.js-0.2-7C3AED?style=for-the-badge)](https://langchain-ai.github.io/langgraphjs/)
+[![Groq](https://img.shields.io/badge/Groq-Llama_3.3_70B-00FFA3?style=for-the-badge)](https://groq.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+
+<br/>
+
+> **Disclaimer**: For educational and research purposes only. Not financial advice.
+
+<br/>
+
+</div>
 
 ---
 
+<<<<<<< HEAD
 #  Preview
 
 > Replace these with screenshots or GIFs from your application.
@@ -53,11 +91,118 @@ It is **not** financial advice.
 | Research Pipeline | Investment Report |
 |-------------------|-------------------|
 | ![](assets/pipeline.png) | ![](assets/report.png) |
+=======
+## What is StockSage?
+
+StockSage is an **autonomous multi-agent investment research system** built on [LangGraph.js](https://langchain-ai.github.io/langgraphjs/).
+
+It replicates the structure of a real investment committee, except every role is played by a specialized AI agent. The Bull Agent builds the strongest possible BUY case. The Bear Agent tears it apart. A Synthesis Judge then weighs both sides against hard quantitative data — P/E ratios, free cash flow, ML model signals, and 7-classifier ensemble outputs — and renders a binary **INVEST** or **PASS** verdict with a 0–100 conviction score.
+
+No gut feelings. No narrative without numbers. **The data rules.**
+
+---
+
+## How It Works — The 6-Node Pipeline
+
+`
+User Query: "the iPhone company"
+      |
+      v
++---------------------+
+|  01  TICKER         |   Natural language -> AAPL
+|      RESOLVER       |   Yahoo Finance autocomplete
++----------+----------+
+           |
+           v
++---------------------+
+|  02  QUANT          |   16 hard financial metrics
+|      AUDITOR        |   P/E, D/E, ROE, FCF, Revenue, Beta...
+|                     |   Zero LLM involvement (no hallucination)
++----------+----------+
+           |
+           v
++---------------------+
+|  03  QUANT ML       |   7 ML classifiers (run locally, no API)
+|      SUITE          |   + Time-series forecasting
+|                     |   + RL trading simulation
+|                     |   + Sentiment attention weights
++----------+----------+
+           |
+           v
++---------------------+
+|  04  BULL           |   Strongest possible BUY thesis
+|      AGENT          |   Llama 3.3 70B @ T=0.3
+|                     |   Growth, moats, momentum, catalysts
++----------+----------+
+           |
+           v
++---------------------+
+|  05  BEAR           |   Strongest possible counter-case
+|      AGENT          |   Llama 3.3 70B @ T=0.3
+|                     |   Leverage, valuation, macro risks
++----------+----------+
+           |
+           v
++---------------------+
+|  06  SYNTHESIS      |   Data > Narrative
+|      JUDGE          |   Llama 3.3 70B @ T=0.15
+|                     |   INVEST or PASS verdict
+|                     |   + Conviction Score (0-100)
++----------+----------+
+           |
+           v
+  Structured Investment Memorandum
+`
+
+Each node can **abort the pipeline** early if its step fails (e.g., unresolvable ticker, bad data), preventing wasted LLM calls downstream.
+
+---
+
+## Feature Breakdown
+
+### Core Research Engine
+| Feature | Description |
+|---|---|
+| **6-Node LangGraph Pipeline** | Deterministic directed graph with typed state transitions |
+| **Adversarial Architecture** | Bull vs Bear with a neutral synthesis judge — modeled on real investment committees |
+| **Zero-hallucination Quant Layer** | All financial numbers come directly from Yahoo Finance, never from an LLM |
+| **Automatic LLM Fallback** | Groq → Gemini → OpenAI, transparent to the user |
+
+### Machine Learning Suite (runs locally, zero API calls)
+| Model | Type |
+|---|---|
+| Logistic Regression | Linear log-odds on P/E, D/E, ROE, Growth, Margin |
+| Random Forest | 5-tree ensemble, majority vote |
+| XGBoost | Gradient boosting, 4 rounds |
+| LightGBM | Leaf-wise boosting, categorical features |
+| CatBoost | Ordered boosting, tail-risk emphasis |
+| SVM (RBF Kernel) | Non-linear boundary in 7D feature space |
+| MLP Neural Network | 2 hidden layers, tanh, dropout |
+| Time-Series Forecast | ARIMA/LSTM-style 30-day price prediction with confidence intervals |
+| RL Simulation | Q-learning agent vs buy-and-hold benchmark |
+| Sentiment Attention | Transformer attention weights on financial news tokens |
+
+### User Interface
+| Feature | Description |
+|---|---|
+| **Neural Search** | Ticker autocomplete with recent search history and live NYSE market status |
+| **Live Terminal** | Real-time agent feed with pipeline progress bar and per-node timing |
+| **Verdict Display** | Animated conviction gauge, full investment memorandum |
+| **Sector Benchmarks** | Company metrics vs sector industry averages (P/E, ROE, margins, etc.) |
+| **Analysis History** | localStorage-persisted history — every analysis saved automatically |
+| **Watchlist Dashboard** | /watchlist — all past analyses with sparklines, conviction rings, filter tabs |
+| **Compare Mode** | SVG radar chart comparing two tickers side by side |
+| **Export to JSON** | Download full analysis as structured JSON |
+| **Ctrl+K Search** | Global keyboard shortcut to focus the search bar |
+| **Responsive Design** | Tabbed mobile layout + 3-column desktop war room |
+| **About Page** | /about — interactive pipeline diagram, ML model accordion, data sources |
+>>>>>>> 667198d (docs: rewrite README to 10/10 — full architecture, feature tables, API reference, contributing guide)
 
 ---
 
 # Why STOCKSAGE?
 
+<<<<<<< HEAD
 Most AI-powered investment tools have one fundamental flaw.
 
 They ask a single language model:
@@ -427,10 +572,26 @@ cd stocksage
 ## Install Dependencies
 
 ```bash
+=======
+### Requirements
+
+- **Node.js** >= 18
+- **At least one LLM API key** (Groq is recommended — free tier is generous)
+
+### 1. Clone the repository
+
+`ash
+git clone https://github.com/Harish1077/equity-research-agent.git
+cd equity-research-agent
+>>>>>>> 667198d (docs: rewrite README to 10/10 — full architecture, feature tables, API reference, contributing guide)
 npm install
 ```
 
+<<<<<<< HEAD
 or
+=======
+### 2. Configure environment variables
+>>>>>>> 667198d (docs: rewrite README to 10/10 — full architecture, feature tables, API reference, contributing guide)
 
 ```bash
 pnpm install
@@ -446,6 +607,7 @@ Create a local environment file.
 cp .env.example .env.local
 ```
 
+<<<<<<< HEAD
 Example configuration:
 
 ```env
@@ -462,6 +624,29 @@ OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx
 #########################################
 # Optional
 #########################################
+=======
+Open .env.local and add your keys:
+
+`env
+# ── Primary LLM — Groq (recommended) ─────────────────────────
+# Free: 14,400 requests/day, ultra-low latency
+# Get your key: https://console.groq.com
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# ── Fallback LLM — Google Gemini ─────────────────────────────
+# Free tier available
+# Get your key: https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=AIzaxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# ── Second fallback — OpenAI ──────────────────────────────────
+# Get your key: https://platform.openai.com/api-keys
+OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+`
+
+> You only need **one** key. The system auto-falls back: Groq -> Gemini -> OpenAI
+
+### 3. Start the development server
+>>>>>>> 667198d (docs: rewrite README to 10/10 — full architecture, feature tables, API reference, contributing guide)
 
 NEXT_PUBLIC_APP_NAME=STOCKSAGE
 ```
@@ -486,6 +671,7 @@ OpenAI
 npm run dev
 ```
 
+<<<<<<< HEAD
 Open
 
 ```
@@ -510,11 +696,15 @@ The AI Investment Committee is now ready.
 | State Management | React Hooks |
 | Storage | localStorage |
 | Deployment | Vercel |
+=======
+Open [http://localhost:3000](http://localhost:3000)
+>>>>>>> 667198d (docs: rewrite README to 10/10 — full architecture, feature tables, API reference, contributing guide)
 
 ---
 
 #  Project Structure
 
+<<<<<<< HEAD
 ```
 stocksage/
 
@@ -544,6 +734,59 @@ stocksage/
 ### `/app`
 
 Contains all Next.js routes, layouts and API endpoints.
+=======
+`
+equity-research-agent/
+|
++-- app/                          # Next.js 14 App Router
+|   +-- page.tsx                  # Main dashboard (hero + war room)
+|   +-- about/page.tsx            # /about — pipeline diagram, ML docs
+|   +-- watchlist/page.tsx        # /watchlist — research history dashboard
+|   +-- layout.tsx                # Root layout, SEO metadata
+|   +-- globals.css               # Design tokens, glassmorphism, animations
+|   +-- api/
+|       +-- research/route.ts     # POST /api/research — SSE streaming pipeline
+|       +-- search/route.ts       # GET /api/search — Yahoo Finance autocomplete
+|
++-- components/
+|   +-- NeuralSearch.tsx          # Search bar: autocomplete, recent, Ctrl+K, market status
+|   +-- LiveTerminal.tsx          # Real-time agent log, pipeline progress bar, filters
+|   +-- VerdictDisplay.tsx        # Verdict gauge, investment memorandum, debate tab
+|   +-- MetricsPanel.tsx          # Fundamentals, ML ensemble, sector benchmarks, JSON export
+|   +-- HistoryDrawer.tsx         # Slide-in drawer: history list, watchlist, compare mode
+|   +-- ComparePanel.tsx          # SVG radar chart + metrics table for 2-ticker comparison
+|
++-- lib/
+|   +-- history.ts                # localStorage: saveAnalysis, getHistory, watchlist, recent
+|   +-- tools.ts                  # Yahoo Finance v2 data fetching utilities
+|   +-- utils.ts                  # Shared formatting helpers
+|   +-- graph/
+|       +-- engine.ts             # LangGraph pipeline builder and StateGraph compiler
+|       +-- state.ts              # ResearchStateAnnotation schema
+|       +-- llm.ts                # Multi-provider LLM factory with automatic fallback
+|       +-- nodes.ts              # All 6 agent node implementations
+|       +-- quant-ml.ts           # ML suite: 7 classifiers, forecasting, RL, attention
+`
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Version |
+|---|---|---|
+| Framework | Next.js | 14 |
+| Language | TypeScript | 5.0 |
+| Agent Orchestration | LangGraph.js | 0.2 |
+| LLM Abstraction | LangChain.js | 0.3 |
+| Primary LLM | Groq (Llama 3.3 70B) | — |
+| Fallback LLM | Google Gemini 2.0 Flash | — |
+| Market Data | Yahoo Finance v2 | 3.x |
+| Animations | Framer Motion | 11 |
+| Styling | Tailwind CSS | 3 |
+| UI Icons | Lucide React | — |
+| Charts | Custom SVG (no library dependency) | — |
+| Persistence | Browser localStorage | — |
+>>>>>>> 667198d (docs: rewrite README to 10/10 — full architecture, feature tables, API reference, contributing guide)
 
 ---
 
@@ -551,17 +794,116 @@ Contains all Next.js routes, layouts and API endpoints.
 
 Reusable UI components including:
 
+<<<<<<< HEAD
 - Search
 - Live Terminal
 - Charts
 - Watchlist
 - Comparison Panel
 - Verdict Display
+=======
+Runs the full 6-node pipeline. Returns a **Server-Sent Events** (SSE) stream.
+
+**Request**
+`json
+{
+  "companyQuery": "Apple"
+}
+`
+
+**Stream Event Types**
+`
+event: message
+data: {"type":"log","entry":{"agent":"resolver","message":"Resolved AAPL","timestamp":1720600000000}}
+
+event: message
+data: {"type":"state","patch":{"ticker":"AAPL","fundamentals":{...}}}
+
+event: message
+data: {"type":"final","state":{...complete ResearchState...}}
+
+event: message
+data: {"type":"error","message":"Could not resolve ticker"}
+`
+
+**Agent values**: 
+esolver | auditor | quant | bull | bear | judge | system
+
+---
+
+### GET /api/search?q={query}
+
+Returns Yahoo Finance ticker autocomplete results.
+
+**Response**
+`json
+{
+  "results": [
+    { "symbol": "AAPL", "name": "Apple Inc." },
+    { "symbol": "AAPL.BA", "name": "Apple Inc. (Buenos Aires)" }
+  ]
+}
+`
+
+---
+
+## LLM Configuration
+
+Edit lib/graph/llm.ts to swap models:
+
+`	ypescript
+// Groq — primary (recommended for speed)
+model: "llama-3.3-70b-versatile"   // or "mixtral-8x7b-32768"
+
+// Gemini — first fallback
+model: "gemini-2.0-flash"          // or "gemini-1.5-pro"
+
+// OpenAI — second fallback
+model: "gpt-4o"                    // or "gpt-4o-mini"
+`
+
+Agent temperatures are set per-node:
+
+`	ypescript
+Bull Agent:       temperature: 0.3   // Creative but grounded
+Bear Agent:       temperature: 0.3   // Creative but relentless
+Synthesis Judge:  temperature: 0.15  // Conservative, data-driven
+`
+
+---
+
+## Contributing
+
+Contributions are welcome!
+
+`ash
+# Fork, then clone your fork
+git clone https://github.com/YOUR_USERNAME/equity-research-agent.git
+cd equity-research-agent
+npm install
+
+# Create a feature branch
+git checkout -b feature/my-feature
+
+# Make your changes, then commit
+git commit -m "feat: describe your change"
+
+# Push and open a PR
+git push origin feature/my-feature
+`
+
+Please ensure:
+- TypeScript compiles without errors (
+pm run build)
+- New components follow the existing glassmorphism design system
+- Agent prompts maintain adversarial integrity (Bull should never concede unprompted, Bear should never be optimistic)
+>>>>>>> 667198d (docs: rewrite README to 10/10 — full architecture, feature tables, API reference, contributing guide)
 
 ---
 
 ### `/lib`
 
+<<<<<<< HEAD
 Application logic.
 
 Includes:
@@ -823,3 +1165,20 @@ It helps others discover the project and supports future development.
 **Built with using Next.js, LangGraph, TypeScript and Multi-Agent AI.**
 
 </div>
+=======
+MIT License — see [LICENSE](LICENSE) for full text.
+
+---
+
+<div align="center">
+
+**Built with adversarial AI.**
+
+*Bull argues. Bear attacks. The data decides.*
+
+<br/>
+
+[![GitHub](https://img.shields.io/badge/View_on_GitHub-181717?style=for-the-badge&logo=github)](https://github.com/Harish1077/equity-research-agent)
+
+</div>
+>>>>>>> 667198d (docs: rewrite README to 10/10 — full architecture, feature tables, API reference, contributing guide)
