@@ -55,10 +55,15 @@ export async function POST(req: NextRequest) {
 
         if (!hasGemini) {
           const isProd = process.env.NODE_ENV === "production";
+          const envKeys = Object.keys(process.env).filter(
+            (k) => k.includes("API") || k.includes("KEY") || k.includes("GEMINI")
+          );
           send({
             type: "error",
             message: isProd
-              ? "Missing Gemini credentials. Please configure GEMINI_API_KEY in your Vercel Project Settings and redeploy."
+              ? `Missing Gemini credentials. Please configure GEMINI_API_KEY in your Vercel Project Settings and redeploy. (Detected keys: ${
+                  envKeys.length > 0 ? envKeys.join(", ") : "none"
+                })`
               : "Missing Gemini credentials. Add GEMINI_API_KEY to .env.local before running research.",
           });
           return;
