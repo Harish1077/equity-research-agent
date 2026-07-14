@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**Every stock goes on trial. Bull argues. Bear attacks. The AI Judge rules on data alone.**
+**Every stock goes on trial. Bull argues. Bear attacks. The AI Judge rules on data alone.** 
 
 ### 🚀 Live Demo: [https://stocksage-beige.vercel.app/](https://stocksage-beige.vercel.app/)
 
